@@ -94,7 +94,7 @@ def tstats(start, end=MAX_DATE):
     func.min(MeasurementClass.tobs),
     func.max(MeasurementClass.tobs),
     func.avg(MeasurementClass.tobs)
-    ).filter(MeasurementClass.date >= start).all()
+    ).filter(MeasurementClass.date.between(start, end)).all()
     
     session.close()
     min_temp, max_temp, avg_temp = temps_active[0]
