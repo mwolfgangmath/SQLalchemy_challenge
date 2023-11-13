@@ -22,6 +22,7 @@ Base.prepare(autoload_with=engine)
 MeasurementClass = Base.classes.measurement
 StationClass = Base.classes.station
 
+
 #################################################
 # Flask Setup
 #################################################
@@ -65,10 +66,9 @@ def precipitation():
 def stations():
     session = Session(engine)
     all_stations = session.query(StationClass.station, StationClass.name).all()
+    
     session.close()
-
-    station_data = [dict(row._mapping) for row in all_stations]
-    #station_data = [{station, name} for station, name in all_stations]
+    station_data = [{"station": station, "name": name} for station, name in all_stations]
     return jsonify(station_data)
 
 @app.route("/api/v1.0/tobs")
@@ -88,8 +88,49 @@ def tobs():
 @app.route("/api/v1.0/tstats/<start>")
 @app.route("/api/v1.0/tstats/<start>/<end>")
 def tstats(start, end=MAX_DATE):
-    return jsonify([start, end]) 
+    session = Session(engine)
+    
+    temps_active = session.query(
+    func.min(MeasurementClass.tobs),
+    func.max(MeasurementClass.tobs),
+    func.avg(MeasurementClass.tobs)
+    ).filter(MeasurementClass.date >= start).all()
+    
+    session.close()
+    min_temp, max_temp, avg_temp = temps_active[0]
+    ##return jsonify([start, end]) 
+    return jsonify({
+        "start_date": start,
+        "end_date": end,
+        "tstats": {
+            "min_temperature": min_temp,
+            "max_temperature": max_temp,
+            "avg_temperature": avg_temp
+        }
+    })
+
 
 
 if __name__ =="__main__":
     app.run()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
